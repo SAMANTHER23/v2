@@ -15,6 +15,11 @@ motor rightMotor1 = motor(PORT1, ratio18_1, false);
 motor rightMotor2 = motor(PORT2, ratio6_1, false);
 motor rightMotor3 = motor(PORT3, ratio6_1, false);
 
+motor matchLoad = motor(PORT14, ratio6_1, false);
+motor hornMotor = motor(PORT15, ratio6_1, false);
+
+motor rollerTop = motor(PORT9, ratio6_1, false);
+motor rollerBottom = motor(PORT10, ratio6_1, false);
 // inertial sensor for auton turning and heading
 // If you do not have an inertial sensor, assign it to an unused port. Ignore the warning at the start of the program.
 inertial inertial1 = inertial(PORT16);
@@ -39,38 +44,103 @@ bool macroMode = false;
 // total number of motors, including drivetrain
 const int NUMBER_OF_MOTORS = 8;
 
+bool hornUp = false;
+void toggleHornPosition() {
+  hornUp = !hornUp;
+  if (hornUp) {
+    hornMotor.spin(forward, 8, volt);
+    wait(100, msec);
+    waitUntil(hornMotor.torque()>0.4);
+    hornMotor.stop(brake);
+    chassis.stop(coast);
+  } else {
+    hornMotor.setVelocity(100, percent);
+    hornMotor.spinFor(reverse, 300, degrees);
+    hornMotor.stop(coast);
+    hornMotor.stop(hold);
+    chassis.stop(hold);
+  }
+}
+
 void intake()
 {
-
+  rollerBottom.spin(forward, 12, volt);
+  rollerTop.stop(hold);
 }
 
 void reverseIntake()
 {
-
+  rollerBottom.spin(reverse, 12, volt);
+  rollerTop.stop(coast);
 }
 
 void stopRollers()
 {
-
+  // Stops the roller motors.
+  rollerBottom.stop(brake);
+  rollerTop.stop(brake);
+  chassis.stop(coast);
 }
 
 
 void scoreLong()
 {
-
+  rollerBottom.spin(forward, 12, volt);
+  rollerTop.spin(forward, 12, volt);
+  chassis.stop(hold);
 }
 
 void scoreMiddle()
 {
-
+  rollerBottom.spin(forward, 12, volt);
+  rollerTop.spin(forward, 5, volt);
+  chassis.stop(hold);
 }
 
-void scoreBalls(){}
-void ejectBalls(){}
-void sortBalls(){}
+void scoreBalls(){
+  if(controller1.ButtonR2.pressing()) {
+    scoreMiddle();
+  }
+  else {
+    scoreLong();
+  }
+}
+void ejectBalls(){
+  rollerBottom.spin(forward, 12, volt);
+  rollerTop.spin(reverse, 12, volt);
+}
 
-void toggleMatchLoad(){}
-void toggleHorn(){}
+bool sortBalls(){
+  if (colorSortMode == 0 || !colorSortOptical.installed()|| !colorSortOptical.isNearObject()) {
+    return true; // color sorting disabled
+  }
+
+  // read color from optical sensor
+  int r = colorSortOptical.color();
+  // assume red is 0-60 and blue is 180-240
+  if ( (r == color::red && colorSortMode == 1) ||  (r == color::blue && colorSortMode == 2))  {
+    return true; // correct color
+  }
+  else {
+    return false; // wrong color
+  }
+}
+
+bool match_load_down = false;
+void toggleMatchLoad(){
+  match_load_down= !match_load_down;
+  if (match_load_down)
+  {
+    matchLoad.spin(reverse, 12, volt);
+  }
+  else
+  {
+    matchLoad.spin(forward, 12, volt);
+ }
+ wait(0.5, sec);
+ matchLoad.stop(hold);
+}
+
 
 // ------------------------------------------------------------------------
 //              Button controls
@@ -79,11 +149,44 @@ void toggleHorn(){}
 
 // This function is called when the L1 button is pressed.
 void buttonL1Action() {
+  if (controller1.ButtonR1.pressing()){ 
+    reverseIntake();}
+  else{
+  intake();
+  }
+
+  
+  // Wait until the button is released to stop the rollers.
+  while(controller1.ButtonL1.pressing()) {
+    wait (20, msec);
+  }
+  stopRollers();
 }
 
 
 void buttonL2Action() {
-
+  bool matching_balls = sortBalls();
+  while(controller1.ButtonL2.pressing()) 
+  {
+    if (!matching_balls) 
+    {
+      ejectBalls();
+    }
+    else 
+    {
+      if (controller1.ButtonR2.pressing()) 
+  {
+    scoreMiddle();
+  }
+  else
+  {
+    scoreLong();
+  }
+    }
+    matching_balls = sortBalls();
+    wait (20, msec);
+  }
+  stopRollers();
 }
 
 void buttonR2Action()
@@ -98,7 +201,7 @@ void buttonR2Action()
 
 void buttonR1Action()
 {
-  
+  toggleHornPosition(); 
 }
 
 void buttonLeftAction()
@@ -106,6 +209,22 @@ void buttonLeftAction()
   // disable button if in auton test mode
   if (autonTestMode) return; 
   changeColorSortMode();
+}
+
+void deScore()
+{
+  float currentHeading = chassis.inertialSensor.heading();
+  if(hornUp) {
+    chassis.driveDistance(10, 10, currentHeading, 6);
+    chassis.turnToHeading(currentHeading-90);
+    chassis.driveDistance(13);
+    toggleHornPosition();
+    chassis.turnToHeading(currentHeading);
+    chassis.driveDistance(-24);
+  }
+  else {
+    chassis.driveDistance(-24, 10, currentHeading, 6);
+  }
 }
 
 void buttonXAction()
@@ -135,7 +254,8 @@ void testButton()
   chassis.stop(coast);
 }
 
-void setupButtonMapping() {
+void setupButtonMapping()
+{
   controller1.ButtonL1.pressed(buttonL1Action);
   controller1.ButtonL2.pressed(buttonL2Action);
   controller1.ButtonR2.pressed(buttonR2Action);
@@ -146,7 +266,8 @@ void setupButtonMapping() {
   controller1.ButtonB.pressed(buttonBAction);
 }
 
-void additionalSetup() {
+void additionalSetup()
+{
   // setup matchload motor here if any
 
   // setup optical sensor here
@@ -207,7 +328,8 @@ void setChassisDefaults() {
   chassis.setArcadeConstants(0.5, 0.5, 0.85);
 }
 
-void changeDriveMode(){
+void changeDriveMode()
+{
   controller1.rumble("-");
   DRIVE_MODE = (DRIVE_MODE +1)%3;
     switch (DRIVE_MODE) {
@@ -227,7 +349,8 @@ void changeDriveMode(){
 }
 
 int colorSortMode = 0; // 0: off, 1: red, 2: blue
-void changeColorSortMode() {
+void changeColorSortMode()
+{
   controller1.rumble("-");
   colorSortMode = (colorSortMode + 1) % 3;
   if (colorSortMode == 0) printControllerScreen("No color sort");
@@ -238,7 +361,8 @@ void changeColorSortMode() {
 
 // This is the user control function.
 // It is called when the driver control period starts.
-void usercontrol(void) {
+void usercontrol(void)
+{
   // Exits the autonomous menu.
   exitAuton();
   additionalSetup();

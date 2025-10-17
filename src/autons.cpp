@@ -8,7 +8,39 @@ void leftAuton() {
 
 void rightAuton()
 {
+  //Score preloaded ball
+  chassis.setHeading(0); 
+  chassis.driveDistance(30);
+  wait(50, msec);
 
+  //grab three balls
+  chassis.driveDistance(-5.5);
+  chassis.turnToHeading(90);
+  
+
+  intake();
+  chassis.driveDistance(20, 4);
+  chassis.turnToHeading(130);
+  stopRollers();
+
+  //Score long goal
+  chassis.driveDistance(28);
+  chassis.turnToHeading(180);
+  chassis.driveDistance(-17);
+  scoreLong();
+  wait(1500, msec);
+  stopRollers();
+
+  //match load
+  chassis.driveDistance(27);
+  toggleMatchLoad();
+  intake();
+  wait(2.5, sec);
+  stopRollers();
+  chassis.driveDistance(-27);
+  reverseIntake();
+  wait(3, sec);
+  stopRollers();
 }
 
 // Runs the selected autonomous routine.

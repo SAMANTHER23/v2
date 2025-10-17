@@ -7,7 +7,7 @@ void scoreMiddle();
 void scoreLong();
 void scoreBalls();
 void ejectBalls();
-void sortBalls();
+bool sortBalls();
 
 void toggleMatchLoad();
 void toggleHorn();
@@ -30,7 +30,6 @@ extern const int NUMBER_OF_MOTORS;
 
 void changeDriveMode();
 void changeColorSortMode();
-
 void setChassisDefaults();
 void additionalSetup();
 void usercontrol();
