@@ -93,7 +93,7 @@ void scoreLong()
 void scoreMiddle()
 {
   rollerBottom.spin(forward, 12, volt);
-  rollerTop.spin(forward, 5, volt);
+  rollerTop.spin(forward, 20, pct);
   chassis.stop(hold);
 }
 
@@ -107,7 +107,7 @@ void scoreBalls(){
 }
 void ejectBalls(){
   rollerBottom.spin(forward, 12, volt);
-  rollerTop.spin(reverse, 12, volt);
+  rollerTop.spin(reverse, 70, pct);
 }
 
 bool sortBalls(){
@@ -131,14 +131,16 @@ void toggleMatchLoad(){
   match_load_down= !match_load_down;
   if (match_load_down)
   {
-    matchLoad.spin(reverse, 12, volt);
+    matchLoad.spinFor(reverse, 300, degrees);
+    matchLoad.stop(coast);
   }
   else
   {
-    matchLoad.spin(forward, 12, volt);
+    matchLoad.spinFor(forward, 300, degrees);
+    matchLoad.stop(coast);
+    wait(20, msec);
+    matchLoad.stop(hold);
  }
- wait(0.5, sec);
- matchLoad.stop(hold);
 }
 
 
@@ -152,7 +154,7 @@ void buttonL1Action() {
   if (controller1.ButtonR1.pressing()){ 
     reverseIntake();}
   else{
-  intake();
+    intake();
   }
 
   
@@ -165,26 +167,20 @@ void buttonL1Action() {
 
 
 void buttonL2Action() {
-  bool matching_balls = sortBalls();
+  
   while(controller1.ButtonL2.pressing()) 
   {
+    bool matching_balls = sortBalls();
     if (!matching_balls) 
     {
       ejectBalls();
     }
     else 
     {
-      if (controller1.ButtonR2.pressing()) 
-  {
-    scoreMiddle();
-  }
-  else
-  {
-    scoreLong();
-  }
+      scoreBalls();
     }
+    wait (100, msec);
     matching_balls = sortBalls();
-    wait (20, msec);
   }
   stopRollers();
 }
@@ -269,7 +265,9 @@ void setupButtonMapping()
 void additionalSetup()
 {
   // setup matchload motor here if any
-
+  matchLoad.stop(hold);
+  matchLoad.setVelocity(100, percent);
+  matchLoad.setTimeout(500, msec);
   // setup optical sensor here
   if (colorSortOptical.installed()) {
     colorSortOptical.setLight(ledState::on);
