@@ -101,6 +101,7 @@ void printMenuItem() {
   // Sets the cursor to the second row, second column.
   Brain.Screen.setCursor(2, 2);
   // Prints the selected autonomous routine name.
+  currentAutonSelection = currentAutonSelection % autonNum;
   Brain.Screen.print("%s", autonMenuText[currentAutonSelection]);
   printControllerScreen(autonMenuText[currentAutonSelection]);
 }

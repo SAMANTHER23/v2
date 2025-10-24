@@ -15,8 +15,8 @@ motor rightMotor1 = motor(PORT1, ratio18_1, false);
 motor rightMotor2 = motor(PORT2, ratio6_1, false);
 motor rightMotor3 = motor(PORT3, ratio6_1, false);
 
-motor matchLoad = motor(PORT14, ratio6_1, false);
-motor hornMotor = motor(PORT15, ratio6_1, false);
+motor matchLoad = motor(PORT14, ratio18_1, true);
+motor hornMotor = motor(PORT8, ratio18_1, true);
 
 motor rollerTop = motor(PORT9, ratio6_1, false);
 motor rollerBottom = motor(PORT10, ratio6_1, false);
@@ -25,7 +25,7 @@ motor rollerBottom = motor(PORT10, ratio6_1, false);
 inertial inertial1 = inertial(PORT16);
 
 optical teamOptical = optical(-1); // assign to an unused port if not used
-optical colorSortOptical = optical(-1); // assign to an unused port if not used
+optical colorSortOptical = optical(PORT19); // assign to an unused port if not used
 
 
 // 0: double arcade drive, 1: single aracde, 2: tank drive
@@ -42,7 +42,7 @@ bool macroMode = false;
 //motor rollerScore = motor(PORT14, ratio6_1, true);
 
 // total number of motors, including drivetrain
-const int NUMBER_OF_MOTORS = 8;
+const int NUMBER_OF_MOTORS = 9;
 
 bool hornUp = false;
 void toggleHornPosition() {
@@ -72,6 +72,7 @@ void reverseIntake()
 {
   rollerBottom.spin(reverse, 12, volt);
   rollerTop.stop(coast);
+  chassis.stop(hold);
 }
 
 void stopRollers()
@@ -80,6 +81,9 @@ void stopRollers()
   rollerBottom.stop(brake);
   rollerTop.stop(brake);
   chassis.stop(coast);
+  if (colorSortOptical.installed()) {
+    colorSortOptical.setLight(ledState::off);
+  }
 }
 
 
@@ -93,36 +97,32 @@ void scoreLong()
 void scoreMiddle()
 {
   rollerBottom.spin(forward, 12, volt);
-  rollerTop.spin(forward, 20, pct);
+  rollerTop.spin(forward, 50, pct);
   chassis.stop(hold);
 }
 
-void scoreBalls(){
-  if(controller1.ButtonR2.pressing()) {
-    scoreMiddle();
-  }
-  else {
-    scoreLong();
-  }
-}
 void ejectBalls(){
   rollerBottom.spin(forward, 12, volt);
   rollerTop.spin(reverse, 70, pct);
 }
 
 bool sortBalls(){
+  if (colorSortOptical.installed()) {
+    colorSortOptical.setLight(ledState::on);
+    colorSortOptical.setLightPower(100, percent);
+  }
   if (colorSortMode == 0 || !colorSortOptical.installed()|| !colorSortOptical.isNearObject()) {
     return true; // color sorting disabled
   }
 
   // read color from optical sensor
-  int r = colorSortOptical.color();
+  color r = colorSortOptical.color();
   // assume red is 0-60 and blue is 180-240
-  if ( (r == color::red && colorSortMode == 1) ||  (r == color::blue && colorSortMode == 2))  {
-    return true; // correct color
+  if ( (r == color::red && colorSortMode == 2) ||  (r == color::blue && colorSortMode == 1))  {
+    return false; // wrong color
   }
   else {
-    return false; // wrong color
+    return true; // everything else
   }
 }
 
@@ -151,13 +151,8 @@ void toggleMatchLoad(){
 
 // This function is called when the L1 button is pressed.
 void buttonL1Action() {
-  if (controller1.ButtonR1.pressing()){ 
-    reverseIntake();}
-  else{
-    intake();
-  }
 
-  
+  intake();
   // Wait until the button is released to stop the rollers.
   while(controller1.ButtonL1.pressing()) {
     wait (20, msec);
@@ -177,20 +172,19 @@ void buttonL2Action() {
     }
     else 
     {
-      scoreBalls();
+      scoreLong();
     }
     wait (100, msec);
-    matching_balls = sortBalls();
   }
   stopRollers();
 }
 
-void buttonR2Action()
+void buttonBAction()
 {
   // brake the drivetrain until the button is released.
   chassis.stop(hold);
   controller1.rumble(".");
-  waitUntil(!controller1.ButtonR2.pressing());
+  waitUntil(!controller1.ButtonB.pressing());
   chassis.checkStatus();
   chassis.stop(coast);
 }
@@ -200,11 +194,24 @@ void buttonR1Action()
   toggleHornPosition(); 
 }
 
+void buttonR2Action()
+{
+  toggleMatchLoad(); 
+}
+
+
 void buttonLeftAction()
 {
   // disable button if in auton test mode
   if (autonTestMode) return; 
+
   changeColorSortMode();
+  wait(400, msec);
+  if (controller1.ButtonLeft.pressing()) {
+    ejectBalls();
+    waitUntil(!controller1.ButtonLeft.pressing());
+    stopRollers();
+  }
 }
 
 void deScore()
@@ -228,9 +235,18 @@ void buttonXAction()
 
 }
 
-void buttonBAction()
+void buttonDownAction()
 {
+  reverseIntake();
+  waitUntil(!controller1.ButtonDown.pressing());
+  stopRollers();
+}
 
+void buttonUpAction()
+{
+  scoreMiddle();
+  waitUntil(!controller1.ButtonUp.pressing());
+  stopRollers();
 }
 
 void testButton()
@@ -260,6 +276,8 @@ void setupButtonMapping()
   controller1.ButtonLeft.pressed(buttonLeftAction);
   controller1.ButtonX.pressed(buttonXAction);
   controller1.ButtonB.pressed(buttonBAction);
+  controller1.ButtonUp.pressed(buttonUpAction);
+  controller1.ButtonDown.pressed(buttonDownAction);
 }
 
 void additionalSetup()
@@ -268,15 +286,6 @@ void additionalSetup()
   matchLoad.stop(hold);
   matchLoad.setVelocity(100, percent);
   matchLoad.setTimeout(500, msec);
-  // setup optical sensor here
-  if (colorSortOptical.installed()) {
-    colorSortOptical.setLight(ledState::on);
-    colorSortOptical.setLightPower(100, percent);
-  }
-  else
-  {
-    colorSortMode = 0; // disable color sorting if no optical sensor
-  }
 }
 
 
