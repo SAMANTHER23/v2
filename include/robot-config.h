@@ -38,3 +38,7 @@ void setupButtonMapping();
 
 extern optical teamOptical;
 extern optical colorSortOptical;
+
+void scoreBalls(int durationMsec);
+void getMatchLoads(int durationMsec);
+float getDistance();

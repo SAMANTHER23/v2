@@ -16,10 +16,10 @@ motor rightMotor2 = motor(PORT2, ratio6_1, false);
 motor rightMotor3 = motor(PORT3, ratio6_1, false);
 
 motor matchLoad = motor(PORT14, ratio18_1, true);
-motor hornMotor = motor(PORT8, ratio18_1, true);
+motor hornMotor = motor(PORT5, ratio18_1, false);
 
-motor rollerTop = motor(PORT9, ratio6_1, false);
-motor rollerBottom = motor(PORT10, ratio6_1, false);
+motor rollerTop = motor(PORT18, ratio6_1, false);
+motor rollerBottom = motor(PORT17, ratio6_1, false);
 // inertial sensor for auton turning and heading
 // If you do not have an inertial sensor, assign it to an unused port. Ignore the warning at the start of the program.
 inertial inertial1 = inertial(PORT16);
@@ -30,7 +30,7 @@ optical colorSortOptical = optical(PORT19); // assign to an unused port if not u
 
 // 0: double arcade drive, 1: single aracde, 2: tank drive
 // -1: disable drive
-int DRIVE_MODE = 0;
+int DRIVE_MODE = 2;
 
 bool macroMode = false;
 
@@ -48,16 +48,16 @@ bool hornUp = false;
 void toggleHornPosition() {
   hornUp = !hornUp;
   if (hornUp) {
-    hornMotor.spin(forward, 8, volt);
+    hornMotor.spin(forward, 10, volt);
     wait(100, msec);
-    waitUntil(hornMotor.torque()>0.4);
+    waitUntil(hornMotor.torque()>0.3);
     hornMotor.stop(brake);
     chassis.stop(coast);
   } else {
-    hornMotor.setVelocity(100, percent);
-    hornMotor.spinFor(reverse, 300, degrees);
-    hornMotor.stop(coast);
-    hornMotor.stop(hold);
+    hornMotor.setVelocity(75, percent);
+    hornMotor.setTimeout(300, msec);
+    hornMotor.spinFor(reverse, 145, degrees);
+    hornMotor.stop(brake);
     chassis.stop(hold);
   }
 }
@@ -97,7 +97,7 @@ void scoreLong()
 void scoreMiddle()
 {
   rollerBottom.spin(forward, 12, volt);
-  rollerTop.spin(forward, 50, pct);
+  rollerTop.spin(forward, 15, pct);
   chassis.stop(hold);
 }
 
@@ -125,6 +125,23 @@ bool sortBalls(){
     return true; // everything else
   }
 }
+void scoreBalls(int durationMsec)
+{
+  int count = durationMsec / 100;;
+  for (int i = 0; i < count; i++) {
+    bool matching_balls = sortBalls();
+    if (!matching_balls) 
+    {
+      ejectBalls();
+    }
+    else 
+    {
+      scoreLong();
+    }
+    wait(100, msec);
+  }
+  stopRollers();
+}
 
 bool match_load_down = false;
 void toggleMatchLoad(){
@@ -141,6 +158,42 @@ void toggleMatchLoad(){
     wait(20, msec);
     matchLoad.stop(hold);
  }
+}
+
+distance frontDistanceSensor = distance(PORT4);
+
+float getDistance()
+{
+  if (frontDistanceSensor.installed()) {
+    return frontDistanceSensor.objectDistance(inches);
+  }
+  else {
+    return -1.0;
+  }
+}
+
+void getMatchLoads(int durationMsec)
+{
+  if (!match_load_down) 
+  {
+    toggleMatchLoad();
+    wait(1000, msec);
+  }
+  intake();
+
+  float d = getDistance();
+  float h = chassis.getHeading();
+
+
+  chassis.driveDistance(d -16, 10, h, 6);
+  chassis.driveWithVoltage(10, 10);
+  wait(100, msec);
+  chassis.stop(coast);
+  wait(100, msec);
+  chassis.driveWithVoltage(10, 10);
+  wait(60, msec);
+  chassis.stop(hold);
+  wait(durationMsec, msec);
 }
 
 
@@ -191,12 +244,12 @@ void buttonBAction()
 
 void buttonR1Action()
 {
-  toggleHornPosition(); 
+  toggleMatchLoad();
 }
 
 void buttonR2Action()
 {
-  toggleMatchLoad(); 
+  toggleHornPosition();
 }
 
 
@@ -232,7 +285,7 @@ void deScore()
 
 void buttonXAction()
 {
-
+  changeDriveMode();
 }
 
 void buttonDownAction()
