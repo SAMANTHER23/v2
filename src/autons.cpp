@@ -324,14 +324,12 @@ void autonTestButtonCheck()
       {
         waitUntil(!controller1.ButtonUp.pressing());
         changeDriveMode();
-        wait(0.5, sec);
         saveConfigParameters();
       }
       if(controller1.ButtonLeft.pressing())
       {
         waitUntil(!controller1.ButtonLeft.pressing());
         changeColorSortMode();
-        wait(0.5, sec);
         saveConfigParameters();
         showAutonMenu();
       }
@@ -342,7 +340,6 @@ void autonTestButtonCheck()
         controller1.rumble(".");
         //scroll through the auton menu
         currentAutonSelection = (currentAutonSelection + 1) % autonNum;
-        wait(0.5, sec);
         saveConfigParameters();
         showAutonMenu();
       }

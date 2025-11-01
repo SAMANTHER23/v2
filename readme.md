@@ -9,3 +9,4 @@ button controls
 - X: Change drive Mode
 - Down: OutTake
 - Up: Score Middle
+DURING GAME, TAP BRAIN SCREEN TO CHANGE COLOR SORT AND AUTON
