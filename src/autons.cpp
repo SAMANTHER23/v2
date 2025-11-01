@@ -4,12 +4,21 @@ int autonTestStep = 0;                // Current step in auton
 
 void leftAuton() 
 {
+ chassis.setHeading(-90);
+  float d = getDistance();
 
+  chassis.driveDistance(d-21);
+  chassis.turnToHeading(-180);
+  getMatchLoads(1000);
+  chassis.driveDistance(-29);
+  toggleMatchLoad();
+
+  scoreBalls(3002);
 }
 
 void rightAuton()
 {
-  chassis.setHeading(90);
+ chassis.setHeading(90);
   float d = getDistance();
 
   chassis.driveDistance(d-20);
