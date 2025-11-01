@@ -12,7 +12,7 @@ void leftAuton()
   getMatchLoads(1000);
   chassis.driveDistance(-29);
   toggleMatchLoad();
-
+return;
   scoreBalls(3002);
 }
 
