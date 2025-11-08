@@ -6,7 +6,7 @@ controller controller1 = controller(primary);
 // ------------------------------------------------------------------------
 //              Drivetrain definition
 // ------------------------------------------------------------------------
-//If you only have 4  motors (or mecanum drive), assign leftMotor3, rightMotor3 to unused ports.
+// If you only have 4  motors (or mecanum drive), assign leftMotor3, rightMotor3 to unused ports.
 motor leftMotor1 = motor(PORT11, ratio18_1, true);
 motor leftMotor2 = motor(PORT12, ratio6_1, true);
 motor leftMotor3 = motor(PORT13, ratio6_1, true);
@@ -24,9 +24,8 @@ motor rollerBottom = motor(PORT17, ratio6_1, false);
 // If you do not have an inertial sensor, assign it to an unused port. Ignore the warning at the start of the program.
 inertial inertial1 = inertial(PORT16);
 
-optical teamOptical = optical(-1); // assign to an unused port if not used
+optical teamOptical = optical(-1);          // assign to an unused port if not used
 optical colorSortOptical = optical(PORT19); // assign to an unused port if not used
-
 
 // 0: double arcade drive, 1: single aracde, 2: tank drive
 // -1: disable drive
@@ -38,22 +37,26 @@ bool macroMode = false;
 //        Other subsystems: motors, sensors and helper functions definition
 // ------------------------------------------------------------------------
 
-//motor rollerIntake = motor(PORT10, ratio6_1, false);
-//motor rollerScore = motor(PORT14, ratio6_1, true);
+// motor rollerIntake = motor(PORT10, ratio6_1, false);
+// motor rollerScore = motor(PORT14, ratio6_1, true);
 
 // total number of motors, including drivetrain
 const int NUMBER_OF_MOTORS = 9;
 
 bool hornUp = false;
-void toggleHornPosition() {
+void toggleHornPosition()
+{
   hornUp = !hornUp;
-  if (hornUp) {
+  if (hornUp)
+  {
     hornMotor.spin(forward, 10, volt);
     wait(100, msec);
-    waitUntil(hornMotor.torque()>0.3);
+    waitUntil(hornMotor.torque() > 0.3);
     hornMotor.stop(brake);
     chassis.stop(coast);
-  } else {
+  }
+  else
+  {
     hornMotor.setVelocity(75, percent);
     hornMotor.setTimeout(300, msec);
     hornMotor.spinFor(reverse, 145, degrees);
@@ -81,11 +84,11 @@ void stopRollers()
   rollerBottom.stop(brake);
   rollerTop.stop(brake);
   chassis.stop(coast);
-  if (colorSortOptical.installed()) {
+  if (colorSortOptical.installed())
+  {
     colorSortOptical.setLight(ledState::off);
   }
 }
-
 
 void scoreLong()
 {
@@ -101,40 +104,48 @@ void scoreMiddle()
   chassis.stop(hold);
 }
 
-void ejectBalls(){
+void ejectBalls()
+{
   rollerBottom.spin(forward, 12, volt);
   rollerTop.spin(reverse, 70, pct);
 }
 
-bool sortBalls(){
-  if (colorSortOptical.installed()) {
+bool sortBalls()
+{
+  if (colorSortOptical.installed())
+  {
     colorSortOptical.setLight(ledState::on);
     colorSortOptical.setLightPower(100, percent);
   }
-  if (colorSortMode == 0 || !colorSortOptical.installed()|| !colorSortOptical.isNearObject()) {
+  if (colorSortMode == 0 || !colorSortOptical.installed() || !colorSortOptical.isNearObject())
+  {
     return true; // color sorting disabled
   }
 
   // read color from optical sensor
   color r = colorSortOptical.color();
   // assume red is 0-60 and blue is 180-240
-  if ( (r == color::red && colorSortMode == 2) ||  (r == color::blue && colorSortMode == 1))  {
+  if ((r == color::red && colorSortMode == 2) || (r == color::blue && colorSortMode == 1))
+  {
     return false; // wrong color
   }
-  else {
+  else
+  {
     return true; // everything else
   }
 }
 void scoreBalls(int durationMsec)
 {
-  int count = durationMsec / 100;;
-  for (int i = 0; i < count; i++) {
+  int count = durationMsec / 100;
+  ;
+  for (int i = 0; i < count; i++)
+  {
     bool matching_balls = sortBalls();
-    if (!matching_balls) 
+    if (!matching_balls)
     {
       ejectBalls();
     }
-    else 
+    else
     {
       scoreLong();
     }
@@ -144,8 +155,9 @@ void scoreBalls(int durationMsec)
 }
 
 bool match_load_down = false;
-void toggleMatchLoad(){
-  match_load_down= !match_load_down;
+void toggleMatchLoad()
+{
+  match_load_down = !match_load_down;
   if (match_load_down)
   {
     matchLoad.spinFor(reverse, 300, degrees);
@@ -157,24 +169,26 @@ void toggleMatchLoad(){
     matchLoad.stop(coast);
     wait(20, msec);
     matchLoad.stop(hold);
- }
+  }
 }
 
 distance frontDistanceSensor = distance(PORT4);
 
 float getDistance()
 {
-  if (frontDistanceSensor.installed()) {
+  if (frontDistanceSensor.installed())
+  {
     return frontDistanceSensor.objectDistance(inches);
   }
-  else {
+  else
+  {
     return -1.0;
   }
 }
 
 void getMatchLoads(int durationMsec)
 {
-  if (!match_load_down) 
+  if (!match_load_down)
   {
     toggleMatchLoad();
     wait(1000, msec);
@@ -184,50 +198,50 @@ void getMatchLoads(int durationMsec)
   float d = getDistance();
   float h = chassis.getHeading();
 
-
-  chassis.driveDistance(d -16, 10, h, 6);
+  chassis.driveDistance(d - 15, 10, h, 6);
   chassis.driveWithVoltage(10, 10);
   wait(100, msec);
   chassis.stop(coast);
-  wait(100, msec);
-  chassis.driveWithVoltage(10, 10);
-  wait(60, msec);
+  wait(50, msec);
   chassis.stop(hold);
+  //chassis.driveWithVoltage(10, 10);
+  //wait(50, msec);
+  //chassis.stop(hold);
   wait(durationMsec, msec);
 }
-
 
 // ------------------------------------------------------------------------
 //              Button controls
 // ------------------------------------------------------------------------
 
-
 // This function is called when the L1 button is pressed.
-void buttonL1Action() {
+void buttonL1Action()
+{
 
   intake();
   // Wait until the button is released to stop the rollers.
-  while(controller1.ButtonL1.pressing()) {
-    wait (20, msec);
+  while (controller1.ButtonL1.pressing())
+  {
+    wait(20, msec);
   }
   stopRollers();
 }
 
+void buttonL2Action()
+{
 
-void buttonL2Action() {
-  
-  while(controller1.ButtonL2.pressing()) 
+  while (controller1.ButtonL2.pressing())
   {
     bool matching_balls = sortBalls();
-    if (!matching_balls) 
+    if (!matching_balls)
     {
       ejectBalls();
     }
-    else 
+    else
     {
       scoreLong();
     }
-    wait (100, msec);
+    wait(100, msec);
   }
   stopRollers();
 }
@@ -252,15 +266,16 @@ void buttonR2Action()
   toggleHornPosition();
 }
 
-
 void buttonLeftAction()
 {
   // disable button if in auton test mode
-  if (autonTestMode) return; 
+  if (autonTestMode)
+    return;
 
   changeColorSortMode();
   wait(400, msec);
-  if (controller1.ButtonLeft.pressing()) {
+  if (controller1.ButtonLeft.pressing())
+  {
     ejectBalls();
     waitUntil(!controller1.ButtonLeft.pressing());
     stopRollers();
@@ -270,15 +285,17 @@ void buttonLeftAction()
 void deScore()
 {
   float currentHeading = chassis.inertialSensor.heading();
-  if(hornUp) {
+  if (hornUp)
+  {
     chassis.driveDistance(10, 10, currentHeading, 6);
-    chassis.turnToHeading(currentHeading-90);
+    chassis.turnToHeading(currentHeading - 90);
     chassis.driveDistance(13);
     toggleHornPosition();
     chassis.turnToHeading(currentHeading);
     chassis.driveDistance(-24);
   }
-  else {
+  else
+  {
     chassis.driveDistance(-24, 10, currentHeading, 6);
   }
 }
@@ -305,16 +322,19 @@ void buttonUpAction()
 void testButton()
 {
   // disable button if in auton test mode, config mode, or in compeitition mode
-  if (autonTestMode  || endGameTimerEnabled) return; 
-  
+  if (autonTestMode || endGameTimerEnabled)
+    return;
+
   double t1 = Brain.Timer.time(sec);
 
-  chassis.setHeading(180);
-  chassis.driveDistance(-35, 10, 198, 6);
+  getMatchLoads(3000);
+  chassis.driveDistance(-20);
+  toggleMatchLoad();
+  stopRollers();
 
   double t2 = Brain.Timer.time(sec);
   char timeMsg[30];
-  sprintf(timeMsg, "run time: %.1f", t2-t1);
+  sprintf(timeMsg, "run time: %.1f", t2 - t1);
   printControllerScreen(timeMsg);
   chassis.stop(coast);
 }
@@ -341,28 +361,25 @@ void additionalSetup()
   matchLoad.setTimeout(500, msec);
 }
 
-
-
 // ------------------------------------------------------------------------
 //               Only change code below this line when necessary
 // ------------------------------------------------------------------------
 
-
 Drive chassis(
-  //Left Motors:
-  motor_group(leftMotor2, leftMotor1, leftMotor3),
-  //Right Motors:
-  motor_group(rightMotor2, rightMotor1, rightMotor3),
-  //Inertial Sensor:
-  inertial1,
-  //wheel diameter:
-  2.75,
-  //Gear ratio of motor to wheel: if your motor has an 36-tooth gear and your wheel has a 48-tooth gear, this value will be 0.75.
-  0.75
-);
+    // Left Motors:
+    motor_group(leftMotor2, leftMotor1, leftMotor3),
+    // Right Motors:
+    motor_group(rightMotor2, rightMotor1, rightMotor3),
+    // Inertial Sensor:
+    inertial1,
+    // wheel diameter:
+    2.75,
+    // Gear ratio of motor to wheel: if your motor has an 36-tooth gear and your wheel has a 48-tooth gear, this value will be 0.75.
+    0.75);
 
 // Resets the chassis constants.
-void setChassisDefaults() {
+void setChassisDefaults()
+{
   // Sets the heading of the chassis to the current heading of the inertial sensor.
   chassis.setHeading(chassis.inertialSensor.heading());
 
@@ -391,21 +408,22 @@ void setChassisDefaults() {
 void changeDriveMode()
 {
   controller1.rumble("-");
-  DRIVE_MODE = (DRIVE_MODE +1)%3;
-    switch (DRIVE_MODE) {
-    case 0:
-      printControllerScreen("Double Arcade");
-      break;
-    case 1:
-      printControllerScreen("Single Arcade");
-      break;
-    case 2:
-      printControllerScreen("Tank Drive");
-      break;
-    case 3:
-      printControllerScreen("Mecanum Drive");
-      break;
-    }
+  DRIVE_MODE = (DRIVE_MODE + 1) % 3;
+  switch (DRIVE_MODE)
+  {
+  case 0:
+    printControllerScreen("Double Arcade");
+    break;
+  case 1:
+    printControllerScreen("Single Arcade");
+    break;
+  case 2:
+    printControllerScreen("Tank Drive");
+    break;
+  case 3:
+    printControllerScreen("Mecanum Drive");
+    break;
+  }
 }
 
 int colorSortMode = 0; // 0: off, 1: red, 2: blue
@@ -413,11 +431,13 @@ void changeColorSortMode()
 {
   controller1.rumble("-");
   colorSortMode = (colorSortMode + 1) % 3;
-  if (colorSortMode == 0) printControllerScreen("No color sort");
-  else if (colorSortMode == 1) printControllerScreen("Sort red");
-  else if (colorSortMode == 2) printControllerScreen("Sort blue");
+  if (colorSortMode == 0)
+    printControllerScreen("No color sort");
+  else if (colorSortMode == 1)
+    printControllerScreen("Sort red");
+  else if (colorSortMode == 2)
+    printControllerScreen("Sort blue");
 }
-
 
 // This is the user control function.
 // It is called when the driver control period starts.
@@ -428,8 +448,10 @@ void usercontrol(void)
   additionalSetup();
 
   // This loop runs forever, controlling the robot during the driver control period.
-  while (1) {
-    switch (DRIVE_MODE) {
+  while (1)
+  {
+    switch (DRIVE_MODE)
+    {
     case 0: // double arcade
       chassis.controlArcade(controller1.Axis2.position(), controller1.Axis4.position());
       break;
@@ -437,12 +459,11 @@ void usercontrol(void)
       chassis.controlArcade(controller1.Axis3.position(), controller1.Axis4.position());
       break;
     case 2: // tank drive
-      chassis.controlTank(controller1.Axis3.position(), controller1.Axis2.position());    
+      chassis.controlTank(controller1.Axis3.position(), controller1.Axis2.position());
       break;
     }
 
     // This wait prevents the loop from using too much CPU time.
     wait(20, msec);
-   } 
+  }
 }
-

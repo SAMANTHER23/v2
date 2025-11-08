@@ -2,6 +2,8 @@
 int currentAutonSelection = 0;        // Current auton selection
 int autonTestStep = 0;                // Current step in auton
 
+
+
 void leftAuton() 
 {
  chassis.setHeading(-90);
@@ -12,7 +14,6 @@ void leftAuton()
   getMatchLoads(1000);
   chassis.driveDistance(-29);
   toggleMatchLoad();
-return;
   scoreBalls(3002);
 }
 
@@ -23,7 +24,7 @@ void rightAuton()
 
   chassis.driveDistance(d-20);
   chassis.turnToHeading(180);
-  getMatchLoads(1000);
+  getMatchLoads(1010);
   chassis.driveDistance(-29);
   toggleMatchLoad();
   scoreBalls(3000);
