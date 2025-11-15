@@ -9,7 +9,7 @@ void leftAuton()
  chassis.setHeading(-90);
   float d = getDistance();
 
-  chassis.driveDistance(d-21);
+  chassis.driveDistance(d-19);
   chassis.turnToHeading(-180);
   getMatchLoads(1000);
   chassis.driveDistance(-29);
@@ -24,12 +24,34 @@ void rightAuton()
 
   chassis.driveDistance(d-20);
   chassis.turnToHeading(180);
-  getMatchLoads(1010);
+  getMatchLoads(1000);
   chassis.driveDistance(-29);
   toggleMatchLoad();
-  scoreBalls(3000);
+  scoreBalls(3002);
   
 
+}
+
+void Rightauton()
+{
+  chassis.setHeading(90);
+  chassis.driveDistance(34, 4);
+  chassis.turnToHeading(180);
+  getMatchLoads(1000);
+  chassis.driveDistance(-29);
+  toggleMatchLoad();
+  scoreBalls(3002);
+}
+
+void Leftauton()
+{
+  chassis.setHeading(-90);
+  chassis.driveDistance(34, 4);
+  chassis.turnToHeading(-180);
+  getMatchLoads(1000);
+  chassis.driveDistance(-29);
+  toggleMatchLoad();
+  scoreBalls(3002);
 }
 
 // Runs the selected autonomous routine.
@@ -42,13 +64,21 @@ void runAutonItem() {
   case 1:
     rightAuton();
     break;
+    case 2:
+    Leftauton();
+    break;
+    case 3:
+    Rightauton();
+    break;
   }
 }
 
 // The names of the autonomous routines to be displayed in the menu.
 char const * autonMenuText[] = {
   "left         ",
-  "right        "
+  "right        ",
+  "Left         ",
+  "Right        "
 };
 
 

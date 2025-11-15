@@ -51,7 +51,7 @@ void toggleHornPosition()
   {
     hornMotor.spin(forward, 10, volt);
     wait(100, msec);
-    waitUntil(hornMotor.torque() > 0.3);
+    waitUntil(hornMotor.torque() > 0.4);
     hornMotor.stop(brake);
     chassis.stop(coast);
   }
@@ -199,8 +199,8 @@ void getMatchLoads(int durationMsec)
   float h = chassis.getHeading();
 
   chassis.driveDistance(d - 15, 10, h, 6);
-  chassis.driveWithVoltage(10, 10);
-  wait(100, msec);
+  chassis.driveWithVoltage(10.5, 10.5);
+  wait(150, msec);
   chassis.stop(coast);
   wait(50, msec);
   chassis.stop(hold);
